@@ -11,26 +11,110 @@ import static java.awt.Color.white;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
 /**
  *
  * @author 
  */
 public class SudokuFile extends javax.swing.JFrame {
     private String turn ="1";
-    
+    private String solvedBoard[][] = new String[9][9];
     private boolean globalflag = true;
-    
-    private String solvedBoard [][] = {
-        {"2", "9", "8", "5", "1", "6", "7", "3", "4"},
-        {"4", "1", "3", "2", "7", "8", "5", "6", "9"},
-        {"7", "5", "6", "3", "4", "9", "1", "2", "8"},
-        {"8", "2", "1", "4", "3", "5", "6", "9", "7"},
-        {"5", "3", "4", "6", "9", "7", "2", "8", "1"},
-        {"9", "6", "7", "1", "8", "2", "3", "4", "5"},
-        {"1", "4", "2", "8", "5", "3", "9", "7", "6"},
-        {"3", "7", "5", "9", "6", "4", "8", "1", "2"},
-        {"6", "8", "9", "7", "2", "1", "4", "5", "3"}
-    };
+    private static final int SIZE = 9;
+    private static final int SUBGRID_SIZE = 3;
+
+    private void generateSudoku() {
+        int[][] board = new int[SIZE][SIZE];
+        if (fillBoard(board, 0, 0)) {
+            for (int i = 0; i < SIZE; i++) {
+                for (int j = 0; j < SIZE; j++) {
+                    solvedBoard[i][j] = String.valueOf(board[i][j]);
+                }
+            }
+        } else {
+            System.out.println("No solution exists");
+        }
+    }
+
+    private static boolean fillBoard(int[][] board, int row, int col) {
+        if (row == SIZE) {
+            return true;
+        }
+
+        if (col == SIZE) {
+            return fillBoard(board, row + 1, 0);
+        }
+
+        List<Integer> numbers = getRandomNumbers();
+        for (int num : numbers) {
+            if (isSafe(board, row, col, num)) {
+                board[row][col] = num;
+                if (fillBoard(board, row, col + 1)) {
+                    return true;
+                }
+                board[row][col] = 0;
+            }
+        }
+
+        return false;
+    }
+
+    private static List<Integer> getRandomNumbers() {
+        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        Collections.shuffle(numbers);
+        return numbers;
+    }
+
+    private static boolean isSafe(int[][] board, int row, int col, int num) {
+        for (int x = 0; x < SIZE; x++) {
+            if (board[row][x] == num || board[x][col] == num) {
+                return false;
+            }
+        }
+
+        int startRow = row - row % SUBGRID_SIZE;
+        int startCol = col - col % SUBGRID_SIZE;
+        for (int i = 0; i < SUBGRID_SIZE; i++) {
+            for (int j = 0; j < SUBGRID_SIZE; j++) {
+                if (board[i + startRow][j + startCol] == num) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private void setTextForCells() {
+        JButton[][] btns = {
+                {r1c1, r1c2, r1c3, r1c4, r1c5, r1c6, r1c7, r1c8, r1c9},
+                {r2c1, r2c2, r2c3, r2c4, r2c5, r2c6, r2c7, r2c8, r2c9},
+                {r3c1, r3c2, r3c3, r3c4, r3c5, r3c6, r3c7, r3c8, r3c9},
+                {r4c1, r4c2, r4c3, r4c4, r4c5, r4c6, r4c7, r4c8, r4c9},
+                {r5c1, r5c2, r5c3, r5c4, r5c5, r5c6, r5c7, r5c8, r5c9},
+                {r6c1, r6c2, r6c3, r6c4, r6c5, r6c6, r6c7, r6c8, r6c9},
+                {r7c1, r7c2, r7c3, r7c4, r7c5, r7c6, r7c7, r7c8, r7c9},
+                {r8c1, r8c2, r8c3, r8c4, r8c5, r8c6, r8c7, r8c8, r8c9},
+                {r9c1, r9c2, r9c3, r9c4, r9c5, r9c6, r9c7, r9c8, r9c9}
+        };
+
+        List<JButton> buttonsToSet = Arrays.asList(
+                r1c4, r1c7, r1c8, r1c9, r2c1, r2c5, r2c6, r2c7, r2c9, r3c1, r3c3, r3c5, r3c8, r4c5, r4c6, r4c8, r5c2, r5c3, r5c7, r5c8, r6c2, r6c4, r6c5, r7c2, r7c5, r7c7, r7c9, r8c1, r8c4, r8c5, r8c9, r9c1, r9c2, r9c3, r9c6
+        );
+
+        for (int i = 0; i < btns.length; i++) {
+            for (int j = 0; j < btns[i].length; j++) {
+                if (buttonsToSet.contains(btns[i][j])) {
+                    btns[i][j].setText(solvedBoard[i][j]);
+                }
+            }
+        }
+    }
+
     
     private void AssignTurn(JButton btn){
         
@@ -182,6 +266,8 @@ public class SudokuFile extends javax.swing.JFrame {
     
     public SudokuFile() {
         initComponents();
+        generateSudoku();
+        setTextForCells();
     }
 
     /**
@@ -302,7 +388,7 @@ public class SudokuFile extends javax.swing.JFrame {
         jPanel4.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
         r1c4.setBackground(new java.awt.Color(170, 203, 231));
-        r1c4.setText("5");
+//        r1c4.setText("5");
         r1c4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r1c4ActionPerformed(evt);
@@ -328,7 +414,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r2c5.setBackground(new java.awt.Color(170, 203, 231));
-        r2c5.setText("7");
+//        r2c5.setText("7");
         r2c5.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r2c5ActionPerformed(evt);
@@ -336,7 +422,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r2c6.setBackground(new java.awt.Color(170, 203, 231));
-        r2c6.setText("8");
+//        r2c6.setText("8");
         r2c6.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r2c6ActionPerformed(evt);
@@ -350,7 +436,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r3c5.setBackground(new java.awt.Color(170, 203, 231));
-        r3c5.setText("4");
+//        r3c5.setText("4");
         r3c5.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r3c5ActionPerformed(evt);
@@ -432,7 +518,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r2c1.setBackground(new java.awt.Color(170, 203, 231));
-        r2c1.setText("4");
+//        r2c1.setText("4");
         r2c1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r2c1ActionPerformed(evt);
@@ -452,7 +538,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r3c1.setBackground(new java.awt.Color(170, 203, 231));
-        r3c1.setText("7");
+//        r3c1.setText("7");
         r3c1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r3c1ActionPerformed(evt);
@@ -466,7 +552,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r3c3.setBackground(new java.awt.Color(170, 203, 231));
-        r3c3.setText("6");
+//        r3c3.setText("6");
         r3c3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r3c3ActionPerformed(evt);
@@ -524,7 +610,7 @@ public class SudokuFile extends javax.swing.JFrame {
         jPanel13.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
         r1c7.setBackground(new java.awt.Color(170, 203, 231));
-        r1c7.setText("7");
+//        r1c7.setText("7");
         r1c7.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r1c7ActionPerformed(evt);
@@ -532,7 +618,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r1c8.setBackground(new java.awt.Color(170, 203, 231));
-        r1c8.setText("3");
+//        r1c8.setText("3");
         r1c8.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r1c8ActionPerformed(evt);
@@ -540,7 +626,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r1c9.setBackground(new java.awt.Color(170, 203, 231));
-        r1c9.setText("4");
+//        r1c9.setText("4");
         r1c9.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r1c9ActionPerformed(evt);
@@ -548,7 +634,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r2c7.setBackground(new java.awt.Color(170, 203, 231));
-        r2c7.setText("5");
+//        r2c7.setText("5");
         r2c7.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r2c7ActionPerformed(evt);
@@ -562,7 +648,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r2c9.setBackground(new java.awt.Color(170, 203, 231));
-        r2c9.setText("9");
+//        r2c9.setText("9");
         r2c9.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r2c9ActionPerformed(evt);
@@ -576,7 +662,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r3c8.setBackground(new java.awt.Color(170, 203, 231));
-        r3c8.setText("2");
+//        r3c8.setText("2");
         r3c8.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r3c8ActionPerformed(evt);
@@ -646,7 +732,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r7c5.setBackground(new java.awt.Color(170, 203, 231));
-        r7c5.setText("5");
+//        r7c5.setText("5");
         r7c5.setToolTipText("");
         r7c5.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -661,7 +747,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r8c4.setBackground(new java.awt.Color(170, 203, 231));
-        r8c4.setText("9");
+//        r8c4.setText("9");
         r8c4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r8c4ActionPerformed(evt);
@@ -669,7 +755,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r8c5.setBackground(new java.awt.Color(170, 203, 231));
-        r8c5.setText("6");
+//        r8c5.setText("6");
         r8c5.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r8c5ActionPerformed(evt);
@@ -695,7 +781,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r9c6.setBackground(new java.awt.Color(170, 203, 231));
-        r9c6.setText("1");
+//        r9c6.setText("1");
         r9c6.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r9c6ActionPerformed(evt);
@@ -759,7 +845,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r4c5.setBackground(new java.awt.Color(170, 203, 231));
-        r4c5.setText("3");
+//        r4c5.setText("3");
         r4c5.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r4c5ActionPerformed(evt);
@@ -767,7 +853,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r4c6.setBackground(new java.awt.Color(170, 203, 231));
-        r4c6.setText("5");
+//        r4c6.setText("5");
         r4c6.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r4c6ActionPerformed(evt);
@@ -793,7 +879,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r6c4.setBackground(new java.awt.Color(170, 203, 231));
-        r6c4.setText("1");
+//        r6c4.setText("1");
         r6c4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r6c4ActionPerformed(evt);
@@ -801,7 +887,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r6c5.setBackground(new java.awt.Color(170, 203, 231));
-        r6c5.setText("8");
+//        r6c5.setText("8");
         r6c5.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r6c5ActionPerformed(evt);
@@ -865,7 +951,7 @@ public class SudokuFile extends javax.swing.JFrame {
         jPanel16.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
         r7c7.setBackground(new java.awt.Color(170, 203, 231));
-        r7c7.setText("9");
+//        r7c7.setText("9");
         r7c7.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r7c7ActionPerformed(evt);
@@ -879,7 +965,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r7c9.setBackground(new java.awt.Color(170, 203, 231));
-        r7c9.setText("6");
+//        r7c9.setText("6");
         r7c9.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r7c9ActionPerformed(evt);
@@ -899,7 +985,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r8c9.setBackground(new java.awt.Color(170, 203, 231));
-        r8c9.setText("2");
+//        r8c9.setText("2");
         r8c9.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r8c9ActionPerformed(evt);
@@ -981,7 +1067,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r4c8.setBackground(new java.awt.Color(170, 203, 231));
-        r4c8.setText("9");
+//        r4c8.setText("9");
         r4c8.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r4c8ActionPerformed(evt);
@@ -995,7 +1081,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r5c7.setBackground(new java.awt.Color(170, 203, 231));
-        r5c7.setText("2");
+//        r5c7.setText("2");
         r5c7.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r5c7ActionPerformed(evt);
@@ -1003,7 +1089,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r5c8.setBackground(new java.awt.Color(170, 203, 231));
-        r5c8.setText("8");
+//        r5c8.setText("8");
         r5c8.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r5c8ActionPerformed(evt);
@@ -1091,7 +1177,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r7c2.setBackground(new java.awt.Color(170, 203, 231));
-        r7c2.setText("4");
+//        r7c2.setText("4");
         r7c2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r7c2ActionPerformed(evt);
@@ -1105,7 +1191,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r8c1.setBackground(new java.awt.Color(170, 203, 231));
-        r8c1.setText("3");
+//        r8c1.setText("3");
         r8c1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r8c1ActionPerformed(evt);
@@ -1125,7 +1211,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r9c1.setBackground(new java.awt.Color(170, 203, 231));
-        r9c1.setText("6");
+//        r9c1.setText("6");
         r9c1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r9c1ActionPerformed(evt);
@@ -1133,7 +1219,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r9c2.setBackground(new java.awt.Color(170, 203, 231));
-        r9c2.setText("8");
+//        r9c2.setText("8");
         r9c2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r9c2ActionPerformed(evt);
@@ -1223,7 +1309,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r5c2.setBackground(new java.awt.Color(170, 203, 231));
-        r5c2.setText("3");
+//        r5c2.setText("3");
         r5c2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r5c2ActionPerformed(evt);
@@ -1231,7 +1317,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r5c3.setBackground(new java.awt.Color(170, 203, 231));
-        r5c3.setText("4");
+//        r5c3.setText("4");
         r5c3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r5c3ActionPerformed(evt);
@@ -1245,7 +1331,7 @@ public class SudokuFile extends javax.swing.JFrame {
         });
 
         r6c2.setBackground(new java.awt.Color(170, 203, 231));
-        r6c2.setText("6");
+//        r6c2.setText("6");
         r6c2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 r6c2ActionPerformed(evt);
