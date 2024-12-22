@@ -8,6 +8,9 @@ import static java.awt.Color.black;
 import static java.awt.Color.blue;
 import static java.awt.Color.red;
 import static java.awt.Color.white;
+
+import java.awt.Color;
+
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -15,6 +18,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import javax.swing.JLabel;
+import javax.swing.Timer;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  *
@@ -26,6 +33,9 @@ public class SudokuFile extends javax.swing.JFrame {
     private boolean globalflag = true;
     private static final int SIZE = 9;
     private static final int SUBGRID_SIZE = 3;
+    private JLabel timerLabel;
+    private Timer timer;
+    private int elapsedTime = 0; // in seconds
 
     private void generateSudoku() {
         int[][] board = new int[SIZE][SIZE];
@@ -132,7 +142,7 @@ public class SudokuFile extends javax.swing.JFrame {
         btn.setBackground(blue);
     }
     
-    private void ResetGame(){
+    private void ResetGame() {
         JButton predifinedBtns [] = {r2c1, r3c1, r3c3, r1c4, r2c5, r2c6, r3c5, r1c7, r1c8, r1c9, r2c7, r2c9, r3c8, r5c2, r5c3, r6c2,
             r4c5, r4c6, r6c4, r6c5, r4c8, r5c8, r5c7, r7c2, r8c1, r9c1, r9c2, r9c3, r7c5, r8c5, r9c6, r8c4, r7c7, r7c9, r8c9};
         
@@ -156,24 +166,32 @@ public class SudokuFile extends javax.swing.JFrame {
             {r9c1, r9c2, r9c3, r9c4, r9c5, r9c6, r9c7, r9c8, r9c9},
         };
         
-        
-        for(int i=0; i<9; i++){
-            for(int j=0; j<9; j++){
-                boolean flag = true;
-                
-                for(int k=0; k<predifinedBtns.length; k++){
-                    if(btns[i][j] == predifinedBtns[k]) {
-                        flag = false;
+        // Reset all cells
+        for(int i=0; i<9; i++) {
+            for(int j=0; j<9; j++) {
+                // Reset non-predefined cells to empty and white background
+                boolean isPredefined = false;
+                for(JButton predefinedBtn : predifinedBtns) {
+                    if(btns[i][j] == predefinedBtn) {
+                        isPredefined = true;
+                        btns[i][j].setBackground(new Color(170, 203, 231)); // Keep predefined cells' color
+                        break;
                     }
                 }
                 
-                if(flag==true){
+                if(!isPredefined) {
                     btns[i][j].setText("");
                     btns[i][j].setForeground(black);
                     btns[i][j].setBackground(white);
                 }
             }
         }
+
+        // Reset game state
+        turn = "1";
+        elapsedTime = 0;
+        timerLabel.setText("Time: 00:00:00");
+        startTimer();
     }
     
     private void SeeSolution(){
@@ -203,7 +221,7 @@ public class SudokuFile extends javax.swing.JFrame {
         if(globalflag==true){
             globalflag=false;
             solnbtn.setText("Hide Solution");
-            
+            stopTimer(); // Stop the timer when showing the solution
             for(int i=0; i<9; i++){
                 for(int j=0; j<9; j++){
                     boolean flag = true;
@@ -234,40 +252,66 @@ public class SudokuFile extends javax.swing.JFrame {
     
     
     //check moves
-    private void Checkmoves(){
-       JButton btns [] [] = {
-            {r1c1, r1c2, r1c3, r1c4, r1c5, r1c6, r1c7,r1c8, r1c9},
-
-            {r2c1, r2c2, r2c3,r2c4, r2c5, r2c6, r2c7, r2c8, r2c9},
-
-            {r3c1, r3c2, r3c3, r3c4, r3c5, r3c6, r3c7, r3c8,r3c9},
-
+    private void Checkmoves() {
+        JButton[][] btns = {
+            {r1c1, r1c2, r1c3, r1c4, r1c5, r1c6, r1c7, r1c8, r1c9},
+            {r2c1, r2c2, r2c3, r2c4, r2c5, r2c6, r2c7, r2c8, r2c9},
+            {r3c1, r3c2, r3c3, r3c4, r3c5, r3c6, r3c7, r3c8, r3c9},
             {r4c1, r4c2, r4c3, r4c4, r4c5, r4c6, r4c7, r4c8, r4c9},
-
-            {r5c1,r5c2,r5c3, r5c4, r5c5, r5c6, r5c7, r5c8, r5c9},
-
-            {r6c1,r6c2, r6c3, r6c4, r6c5, r6c6, r6c7, r6c8, r6c9},
-
-            {r7c1, r7c2, r7c3, r7c4, r7c5, r7c6, r7c7,r7c8,r7c9},
-
-            {r8c1,r8c2, r8c3, r8c4, r8c5, r8c6, r8c7, r8c8, r8c9},
-
-            {r9c1, r9c2, r9c3, r9c4, r9c5, r9c6, r9c7, r9c8, r9c9},
+            {r5c1, r5c2, r5c3, r5c4, r5c5, r5c6, r5c7, r5c8, r5c9},
+            {r6c1, r6c2, r6c3, r6c4, r6c5, r6c6, r6c7, r6c8, r6c9},
+            {r7c1, r7c2, r7c3, r7c4, r7c5, r7c6, r7c7, r7c8, r7c9},
+            {r8c1, r8c2, r8c3, r8c4, r8c5, r8c6, r8c7, r8c8, r8c9},
+            {r9c1, r9c2, r9c3, r9c4, r9c5, r9c6, r9c7, r9c8, r9c9}
         };
-       
-       for(int i=0; i<9; i++){
-           for(int j=0; j<9; j++){
-               if(btns[i][j].getText()!= solvedBoard[i][j] && btns[i][j].getText()!=""){
-                   btns[i][j].setBackground(red);
-               }
-           }
-       }
+
+        boolean allCorrect = true;
+        boolean allFilled = true;
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                if (!btns[i][j].getText().isEmpty()) {
+                    if (btns[i][j].getText().equals(solvedBoard[i][j])) {
+                        btns[i][j].setBackground(new Color(0, 255, 0)); // Green
+                    } else {
+                        btns[i][j].setBackground(new Color(255, 0, 0)); // Red
+                        allCorrect = false;
+                    }
+                } else {
+                    allFilled = false;
+                }
+            }
+        }
+        if (allCorrect && allFilled) {
+            stopTimer();
+            JOptionPane.showMessageDialog(this, "Congratulations! You solved the puzzle.", "Success", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
     
+    private void startTimer() {
+        timer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                elapsedTime++;
+                int hours = elapsedTime / 3600;
+                int minutes = (elapsedTime % 3600) / 60;
+                int seconds = elapsedTime % 60;
+                timerLabel.setText(String.format("Time: %02d:%02d:%02d", hours, minutes, seconds));
+            }
+        });
+        timer.start();
+    }
+
+    private void stopTimer() {
+        if (timer != null) {
+            timer.stop();
+        }
+    }
+
     public SudokuFile() {
         initComponents();
         generateSudoku();
         setTextForCells();
+        startTimer();
     }
 
     /**
@@ -382,6 +426,7 @@ public class SudokuFile extends javax.swing.JFrame {
         solnbtn = new javax.swing.JButton();
         checkbtn = new javax.swing.JButton();
         exitbtn = new javax.swing.JButton();
+        timerLabel = new JLabel("Time: 00:00:00");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -1567,11 +1612,17 @@ public class SudokuFile extends javax.swing.JFrame {
                                 .addGap(63, 63, 63)
                                 .addComponent(exitbtn, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                 .addGap(25, 25, 25))
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(timerLabel)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(25, 25, 25)
+                .addContainerGap()
+                .addComponent(timerLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel12, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2128,7 +2179,7 @@ public class SudokuFile extends javax.swing.JFrame {
     private void Sbtn5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Sbtn5ActionPerformed
         // TODO add your handling code here:
         AssignTurn(Sbtn5);
-        turn="6";
+        turn="5";
     }//GEN-LAST:event_Sbtn5ActionPerformed
 
     private void Sbtn6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Sbtn6ActionPerformed
