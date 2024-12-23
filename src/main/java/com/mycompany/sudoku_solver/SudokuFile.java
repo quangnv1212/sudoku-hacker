@@ -99,7 +99,7 @@ public class SudokuFile extends javax.swing.JFrame {
         return true;
     }
 
-    private void setTextForCells() {
+    private void setHint() {
         JButton[][] btns = {
                 {r1c1, r1c2, r1c3, r1c4, r1c5, r1c6, r1c7, r1c8, r1c9},
                 {r2c1, r2c2, r2c3, r2c4, r2c5, r2c6, r2c7, r2c8, r2c9},
@@ -113,7 +113,9 @@ public class SudokuFile extends javax.swing.JFrame {
         };
 
         List<JButton> buttonsToSet = Arrays.asList(
-                r1c4, r1c7, r1c8, r1c9, r2c1, r2c5, r2c6, r2c7, r2c9, r3c1, r3c3, r3c5, r3c8, r4c5, r4c6, r4c8, r5c2, r5c3, r5c7, r5c8, r6c2, r6c4, r6c5, r7c2, r7c5, r7c7, r7c9, r8c1, r8c4, r8c5, r8c9, r9c1, r9c2, r9c3, r9c6
+                r1c4, r1c7, r1c8, r1c9, r2c1, r2c5, r2c6, r2c7, r2c9, r3c1, r3c3, r3c5,
+                r3c8, r4c5, r4c6, r4c8, r5c2, r5c3, r5c7, r5c8, r6c2, r6c4, r6c5, r7c2,
+                r7c5, r7c7, r7c9, r8c1, r8c4, r8c5, r8c9, r9c1, r9c2, r9c3, r9c6
         );
 
         for (int i = 0; i < btns.length; i++) {
@@ -310,7 +312,7 @@ public class SudokuFile extends javax.swing.JFrame {
     public SudokuFile() {
         initComponents();
         generateSudoku();
-        setTextForCells();
+        setHint();
         startTimer();
     }
 
